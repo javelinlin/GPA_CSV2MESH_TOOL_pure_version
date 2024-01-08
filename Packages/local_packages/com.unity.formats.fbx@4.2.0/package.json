@@ -1,0 +1,30 @@
+{
+  "name": "com.unity.formats.fbx",
+  "displayName": "FBX Exporter",
+  "version": "4.2.0",
+  "dependencies": {
+    "com.unity.timeline": "1.7.1",
+    "com.autodesk.fbx": "4.2.0"
+  },
+  "unity": "2019.4",
+  "unityRelease": "0f1",
+  "description": "The Unity FBX Exporter package makes it easy to send geometry and animation to any application that supports the FBX format and send them back to Unity with minimal effort.\n\nIn particular, this round-trip workflow enables you to export Unity Scenes to FBX files, import them into Autodesk® Maya®, Autodesk® Maya LT™, or Autodesk® 3ds Max® using an artist-friendly interface, export Unity-ready FBX geometry and animation, and safely merge your changes back into those Assets to continue your work in Unity.",
+  "keywords": [
+    "fbx",
+    "animation",
+    "modeling",
+    "maya",
+    "max"
+  ],
+  "relatedPackages": {
+    "com.unity.formats.fbx.tests": "4.2.0"
+  },
+  "upmCi": {
+    "footprint": "33cdadbc6b34f1a5ba3c76f4b82984168788a8a6"
+  },
+  "repository": {
+    "url": "https://github.com/Unity-Technologies/com.unity.formats.fbx.git",
+    "type": "git",
+    "revision": "1ac7c9cbf3bc838b37b5e527b563b59c74a4c203"
+  }
+}
