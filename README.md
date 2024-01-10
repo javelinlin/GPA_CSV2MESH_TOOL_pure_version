@@ -6,5 +6,7 @@ see blog : https://blog.csdn.net/linjf520/article/details/127066726
 
 # Reqiures
 Unity : 2020.3.37f1
+
 Pipeline : BRP/URP
+
 Packages : FBX Exporter 4.2.0
