@@ -1817,9 +1817,6 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
             }
             normals[idx] = M_IT_mat * info.NORMAL;
             tangents[idx] = info.TANGENT;
-            //// 测试 Unity Mesh.SetUVs(int channel, Vector4[] uvs) 是否有效
-            info.TEXCOORD0_Z = 0.25f; // 强制写入 z 分量为 0.25f
-            info.TEXCOORD0_W = 0.5f; // 强制写入 w 分量为 0.5f
             uv[idx] = info.TEXCOORD0;
             uv2[idx] = info.TEXCOORD1;
             uv3[idx] = info.TEXCOORD2;
