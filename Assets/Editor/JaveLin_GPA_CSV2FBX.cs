@@ -821,6 +821,16 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
         {
             outputDir = EditorUtility.OpenFolderPanel("Select an output path", outputDir, "");
         }
+        if (GUILayout.Button("Pin", GUILayout.Width(100)))
+        {
+            var folderPath = "";
+            if (outputDir.Contains(Application.dataPath))
+            {
+                folderPath = "Assets" + outputDir.Replace(Application.dataPath, "");
+            }
+            var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(folderPath);
+            if (obj != null) EditorGUIUtility.PingObject(obj);
+        }
         EditorGUILayout.EndHorizontal();
         // jave.lin : 显示导出的 full name
         GUI.enabled = false;
@@ -1285,70 +1295,78 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
         }
         container["VTX"]                = SemanticType.VTX;
         container["IDX"]                = SemanticType.IDX;
-        container["SV_POSITION.x"]      = SemanticType.POSITION_X;
-        container["SV_POSITION.y"]      = SemanticType.POSITION_Y;
-        container["SV_POSITION.z"]      = SemanticType.POSITION_Z;
-        container["SV_POSITION.w"]      = SemanticType.POSITION_W;
-        container["SV_Position.x"]      = SemanticType.POSITION_X;
-        container["SV_Position.y"]      = SemanticType.POSITION_Y;
-        container["SV_Position.z"]      = SemanticType.POSITION_Z;
-        container["SV_Position.w"]      = SemanticType.POSITION_W;
-        container["POSITION.x"]         = SemanticType.POSITION_X;
-        container["POSITION.y"]         = SemanticType.POSITION_Y;
-        container["POSITION.z"]         = SemanticType.POSITION_Z;
-        container["POSITION.w"]         = SemanticType.POSITION_W;
-        container["NORMAL.x"]           = SemanticType.NORMAL_X;
-        container["NORMAL.y"]           = SemanticType.NORMAL_Y;
-        container["NORMAL.z"]           = SemanticType.NORMAL_Z;
-        container["NORMAL.w"]           = SemanticType.NORMAL_W;
-        container["TANGENT.x"]          = SemanticType.TANGENT_X;
-        container["TANGENT.y"]          = SemanticType.TANGENT_Y;
-        container["TANGENT.z"]          = SemanticType.TANGENT_Z;
-        container["TANGENT.w"]          = SemanticType.TANGENT_W;
-        container["TEXCOORD.x"]         = SemanticType.TEXCOORD0_X;
-        container["TEXCOORD.y"]         = SemanticType.TEXCOORD0_Y;
-        container["TEXCOORD.z"]         = SemanticType.TEXCOORD0_Z;
-        container["TEXCOORD.w"]         = SemanticType.TEXCOORD0_W;
-        container["TEXCOORD0.x"]        = SemanticType.TEXCOORD0_X;
-        container["TEXCOORD0.y"]        = SemanticType.TEXCOORD0_Y;
-        container["TEXCOORD0.z"]        = SemanticType.TEXCOORD0_Z;
-        container["TEXCOORD0.w"]        = SemanticType.TEXCOORD0_W;
-        container["TEXCOORD1.x"]        = SemanticType.TEXCOORD1_X;
-        container["TEXCOORD1.y"]        = SemanticType.TEXCOORD1_Y;
-        container["TEXCOORD1.z"]        = SemanticType.TEXCOORD1_Z;
-        container["TEXCOORD1.w"]        = SemanticType.TEXCOORD1_W;
-        container["TEXCOORD2.x"]        = SemanticType.TEXCOORD2_X;
-        container["TEXCOORD2.y"]        = SemanticType.TEXCOORD2_Y;
-        container["TEXCOORD2.z"]        = SemanticType.TEXCOORD2_Z;
-        container["TEXCOORD2.w"]        = SemanticType.TEXCOORD2_W;
-        container["TEXCOORD3.x"]        = SemanticType.TEXCOORD3_X;
-        container["TEXCOORD3.y"]        = SemanticType.TEXCOORD3_Y;
-        container["TEXCOORD3.z"]        = SemanticType.TEXCOORD3_Z;
-        container["TEXCOORD3.w"]        = SemanticType.TEXCOORD3_W;
-        container["TEXCOORD4.x"]        = SemanticType.TEXCOORD4_X;
-        container["TEXCOORD4.y"]        = SemanticType.TEXCOORD4_Y;
-        container["TEXCOORD4.z"]        = SemanticType.TEXCOORD4_Z;
-        container["TEXCOORD4.w"]        = SemanticType.TEXCOORD4_W;
-        container["TEXCOORD5.x"]        = SemanticType.TEXCOORD5_X;
-        container["TEXCOORD5.y"]        = SemanticType.TEXCOORD5_Y;
-        container["TEXCOORD5.z"]        = SemanticType.TEXCOORD5_Z;
-        container["TEXCOORD5.w"]        = SemanticType.TEXCOORD5_W;
-        container["TEXCOORD6.x"]        = SemanticType.TEXCOORD6_X;
-        container["TEXCOORD6.y"]        = SemanticType.TEXCOORD6_Y;
-        container["TEXCOORD6.z"]        = SemanticType.TEXCOORD6_Z;
-        container["TEXCOORD6.w"]        = SemanticType.TEXCOORD6_W;
-        container["TEXCOORD7.x"]        = SemanticType.TEXCOORD7_X;
-        container["TEXCOORD7.y"]        = SemanticType.TEXCOORD7_Y;
-        container["TEXCOORD7.z"]        = SemanticType.TEXCOORD7_Z;
-        container["TEXCOORD7.w"]        = SemanticType.TEXCOORD7_W;
-        container["COLOR0.x"]           = SemanticType.COLOR0_X;
-        container["COLOR0.y"]           = SemanticType.COLOR0_Y;
-        container["COLOR0.z"]           = SemanticType.COLOR0_Z;
-        container["COLOR0.w"]           = SemanticType.COLOR0_W;
-        container["COLOR.x"]            = SemanticType.COLOR0_X;
-        container["COLOR.y"]            = SemanticType.COLOR0_Y;
-        container["COLOR.z"]            = SemanticType.COLOR0_Z;
-        container["COLOR.w"]            = SemanticType.COLOR0_W;
+        container["SV_POSITION.X"]      = SemanticType.POSITION_X;
+        container["SV_POSITION.Y"]      = SemanticType.POSITION_Y;
+        container["SV_POSITION.Z"]      = SemanticType.POSITION_Z;
+        container["SV_POSITION.W"]      = SemanticType.POSITION_W;
+        container["POSITION.X"]         = SemanticType.POSITION_X;
+        container["POSITION.Y"]         = SemanticType.POSITION_Y;
+        container["POSITION.Z"]         = SemanticType.POSITION_Z;
+        container["POSITION.W"]         = SemanticType.POSITION_W;
+        container["POSITION0.X"]        = SemanticType.POSITION_X;
+        container["POSITION0.Y"]        = SemanticType.POSITION_Y;
+        container["POSITION0.Z"]        = SemanticType.POSITION_Z;
+        container["POSITION0.W"]        = SemanticType.POSITION_W;
+        container["NORMAL.X"]           = SemanticType.NORMAL_X;
+        container["NORMAL.Y"]           = SemanticType.NORMAL_Y;
+        container["NORMAL.Z"]           = SemanticType.NORMAL_Z;
+        container["NORMAL.W"]           = SemanticType.NORMAL_W;
+        container["NORMAL0.X"]          = SemanticType.NORMAL_X;
+        container["NORMAL0.Y"]          = SemanticType.NORMAL_Y;
+        container["NORMAL0.Z"]          = SemanticType.NORMAL_Z;
+        container["NORMAL0.W"]          = SemanticType.NORMAL_W;
+        container["TANGENT.X"]          = SemanticType.TANGENT_X;
+        container["TANGENT.Y"]          = SemanticType.TANGENT_Y;
+        container["TANGENT.Z"]          = SemanticType.TANGENT_Z;
+        container["TANGENT.W"]          = SemanticType.TANGENT_W;
+        container["TANGENT0.X"]         = SemanticType.TANGENT_X;
+        container["TANGENT0.Y"]         = SemanticType.TANGENT_Y;
+        container["TANGENT0.Z"]         = SemanticType.TANGENT_Z;
+        container["TANGENT0.W"]         = SemanticType.TANGENT_W;
+        container["TEXCOORD.X"]         = SemanticType.TEXCOORD0_X;
+        container["TEXCOORD.Y"]         = SemanticType.TEXCOORD0_Y;
+        container["TEXCOORD.Z"]         = SemanticType.TEXCOORD0_Z;
+        container["TEXCOORD.W"]         = SemanticType.TEXCOORD0_W;
+        container["TEXCOORD0.X"]        = SemanticType.TEXCOORD0_X;
+        container["TEXCOORD0.Y"]        = SemanticType.TEXCOORD0_Y;
+        container["TEXCOORD0.Z"]        = SemanticType.TEXCOORD0_Z;
+        container["TEXCOORD0.W"]        = SemanticType.TEXCOORD0_W;
+        container["TEXCOORD1.X"]        = SemanticType.TEXCOORD1_X;
+        container["TEXCOORD1.Y"]        = SemanticType.TEXCOORD1_Y;
+        container["TEXCOORD1.Z"]        = SemanticType.TEXCOORD1_Z;
+        container["TEXCOORD1.W"]        = SemanticType.TEXCOORD1_W;
+        container["TEXCOORD2.X"]        = SemanticType.TEXCOORD2_X;
+        container["TEXCOORD2.Y"]        = SemanticType.TEXCOORD2_Y;
+        container["TEXCOORD2.Z"]        = SemanticType.TEXCOORD2_Z;
+        container["TEXCOORD2.W"]        = SemanticType.TEXCOORD2_W;
+        container["TEXCOORD3.X"]        = SemanticType.TEXCOORD3_X;
+        container["TEXCOORD3.Y"]        = SemanticType.TEXCOORD3_Y;
+        container["TEXCOORD3.Z"]        = SemanticType.TEXCOORD3_Z;
+        container["TEXCOORD3.W"]        = SemanticType.TEXCOORD3_W;
+        container["TEXCOORD4.X"]        = SemanticType.TEXCOORD4_X;
+        container["TEXCOORD4.Y"]        = SemanticType.TEXCOORD4_Y;
+        container["TEXCOORD4.Z"]        = SemanticType.TEXCOORD4_Z;
+        container["TEXCOORD4.W"]        = SemanticType.TEXCOORD4_W;
+        container["TEXCOORD5.X"]        = SemanticType.TEXCOORD5_X;
+        container["TEXCOORD5.Y"]        = SemanticType.TEXCOORD5_Y;
+        container["TEXCOORD5.Z"]        = SemanticType.TEXCOORD5_Z;
+        container["TEXCOORD5.W"]        = SemanticType.TEXCOORD5_W;
+        container["TEXCOORD6.X"]        = SemanticType.TEXCOORD6_X;
+        container["TEXCOORD6.Y"]        = SemanticType.TEXCOORD6_Y;
+        container["TEXCOORD6.Z"]        = SemanticType.TEXCOORD6_Z;
+        container["TEXCOORD6.W"]        = SemanticType.TEXCOORD6_W;
+        container["TEXCOORD7.X"]        = SemanticType.TEXCOORD7_X;
+        container["TEXCOORD7.Y"]        = SemanticType.TEXCOORD7_Y;
+        container["TEXCOORD7.Z"]        = SemanticType.TEXCOORD7_Z;
+        container["TEXCOORD7.W"]        = SemanticType.TEXCOORD7_W;
+        container["COLOR0.X"]           = SemanticType.COLOR0_X;
+        container["COLOR0.Y"]           = SemanticType.COLOR0_Y;
+        container["COLOR0.Z"]           = SemanticType.COLOR0_Z;
+        container["COLOR0.W"]           = SemanticType.COLOR0_W;
+        container["COLOR.X"]            = SemanticType.COLOR0_X;
+        container["COLOR.Y"]            = SemanticType.COLOR0_Y;
+        container["COLOR.Z"]            = SemanticType.COLOR0_Z;
+        container["COLOR.W"]            = SemanticType.COLOR0_W;
     }
 
     // jave.lin : 获取 parent transform 对象
@@ -1737,8 +1755,8 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
 
             for (int i = 1; i < semanticTitles.Length; i++)
             {
-                var semantic = semanticTitles[i];
-                if (!semantic_type_map_key_name.TryGetValue(semantic.Trim(), out SemanticType semanticType))
+                var semantic = semanticTitles[i].Trim().ToUpper();
+                if (!semantic_type_map_key_name.TryGetValue(semantic, out SemanticType semanticType))
                 {
                     Debug.LogError($"Cannot find the semantic mapping data : {semantic}");
                 }
