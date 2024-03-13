@@ -14,7 +14,7 @@ using UnityEngine;
 
 public class JaveLin_GPA_CSV2FBX : EditorWindow
 {
-    [MenuItem("Tools/JaveLin_GPA_CSV2FBX")]
+    [MenuItem("Tools/JaveLin_GPA_CSV2FBX...")]
     private static void _Show()
     {
         var win = EditorWindow.GetWindow<JaveLin_GPA_CSV2FBX>();
@@ -907,13 +907,10 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
             vertexRotation = EditorGUILayout.Vector3Field("Vertex Rotation", vertexRotation);
             // jave.lin : 顶点缩放
             vertexScale = EditorGUILayout.Vector3Field("Vertex Scale", vertexScale);
-            if (exportFileType == ExportFileType.FBX)
-            {
-                // jave.lin : 法线导入方式
-                normalImportType = (ModelImporterNormals)EditorGUILayout.EnumPopup("Normal Import Type", normalImportType);
-                // jave.lin : 切线导入方式
-                tangentImportType = (ModelImporterTangents)EditorGUILayout.EnumPopup("Tangent Import Type", tangentImportType);
-            }
+            // jave.lin : 法线导入方式
+            normalImportType = (ModelImporterNormals)EditorGUILayout.EnumPopup("Normal Import Type", normalImportType);
+            // jave.lin : 切线导入方式
+            tangentImportType = (ModelImporterTangents)EditorGUILayout.EnumPopup("Tangent Import Type", tangentImportType);
             EditorGUI.indentLevel--;
         }
         EditorGUILayout.EndFoldoutHeaderGroup();
@@ -1758,6 +1755,7 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
                 var semantic = semanticTitles[i].Trim().ToUpper();
                 if (!semantic_type_map_key_name.TryGetValue(semantic, out SemanticType semanticType))
                 {
+                    semanticTypeDict_key_name_helper[semantic] = SemanticType.Unknow;
                     Debug.LogError($"Cannot find the semantic mapping data : {semantic}");
                 }
                 semanticTitleListHelper.Add(semanticType);
