@@ -144,6 +144,24 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
         FBX,            // 注意如果使用这种方式的话，会有 uv 不能保存超过 vector2 分量的数据，也就是说，uv无法保存 vector3 或 vector4 的数据
         UnityMesh,      // 如果抓帧的模型发现 shaderlab 里面有使用到 vertex input TEXCOORD[n] 是超过2个以上的分量的，就不能使用 FBX 了，使用 UnityMesh 保存的网格可以保存下这些 uv 数据
     }
+    public enum IndicesOffsetDataType
+    {
+        Byte = 1,
+        Short = 2,
+        UInt = 4,
+    }
+    // jave.lin : 索引提取长度时的类型
+    public enum IndicesPickLengthType
+    {
+        PrimitiveCount = 3, // 按 图元 数量来定长度
+        IndicesCount = 1,   // 按 索引 数量来定长度
+    }
+    // jave.lin : indices format type
+    public enum IndicesFormatType
+    {
+        UShort = 2,     // two bytes
+        UInt = 4,       // four bytes
+    }
 
     // jave.lin : application to vertex shader 的通用类型（辅助转换用）
     public class VertexInfo
@@ -373,6 +391,18 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
     private UnityEngine.Object role_folder_obj;
     private TextAsset position_CSV_TextAsset;
     private TextAsset index_CSV_TextAsset;
+    private bool use_ibv_offset_and_length;
+    // 源的 indices offset data 的类型
+    private IndicesOffsetDataType src_indicesOffsetDataType = IndicesOffsetDataType.Byte;
+    // 目标 indices offset data 的类型
+    private IndicesOffsetDataType dst_indicesOffsetDataType = IndicesOffsetDataType.Byte;
+    private int src_index_CSV_Offset;
+    private IndicesPickLengthType indicesPickLengthType = IndicesPickLengthType.PrimitiveCount;
+    // 源的 index format
+    private IndicesFormatType src_indicesFormatType = IndicesFormatType.UShort;
+    // 目标的 
+    private IndicesFormatType dst_indicesFormatType = IndicesFormatType.UShort;
+    private int index_CSV_Length;
     private TextAsset tangent_CSV_TextAsset;
     private TextAsset normal_CSV_TextAsset;
     private TextAsset uv0_CSV_TextAsset;
@@ -472,6 +502,9 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
         role_folder_obj = null;
         position_CSV_TextAsset = null;
         index_CSV_TextAsset = null;
+        src_indicesOffsetDataType = IndicesOffsetDataType.Byte;
+        src_index_CSV_Offset = 0;
+        index_CSV_Length = 0;
         tangent_CSV_TextAsset = null;
         normal_CSV_TextAsset = null;
         uv0_CSV_TextAsset = null;
@@ -548,7 +581,7 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
     private Shader GetShader(string custom_shader_name = null)
     {
         Shader ret = null;
-        if (string.IsNullOrEmpty(custom_shader_name))
+        if (!string.IsNullOrEmpty(custom_shader_name))
             ret = Shader.Find(custom_shader_name); // jave.lin : custom special
         if (ret == null) // jave.lin : BRP standard
             ret = Shader.Find("Standard");
@@ -672,7 +705,32 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
 
         // jave.lin : position 是必选项，不用 toggle
         var new_position_CSV_TextAsset = EditorGUILayout.ObjectField("position_CSV", position_CSV_TextAsset, typeof(TextAsset), false) as TextAsset;
+
+        EditorGUILayout.BeginHorizontal();
         var new_index_CSV_TextAsset = EditorGUILayout.ObjectField("index_CSV", index_CSV_TextAsset, typeof(TextAsset), false) as TextAsset;
+        use_ibv_offset_and_length = EditorGUILayout.Toggle("use ibv offset and length", use_ibv_offset_and_length);
+        EditorGUILayout.EndHorizontal();
+
+        if (use_ibv_offset_and_length)
+        {
+            // jave.lin : 先设置 源的 indices format 和 目标 indices format，便于后续处理 indices offset 和 indices pickup length 的 类型
+            EditorGUILayout.BeginHorizontal();
+            src_indicesFormatType = (IndicesFormatType)EditorGUILayout.EnumPopup("src indices format type", src_indicesFormatType);
+            dst_indicesFormatType = (IndicesFormatType)EditorGUILayout.EnumPopup("dst indices format type", dst_indicesFormatType);
+            EditorGUILayout.EndHorizontal();
+
+            // jave.lin : indices offset 偏移
+            EditorGUILayout.BeginHorizontal();
+            src_indicesOffsetDataType = (IndicesOffsetDataType)EditorGUILayout.EnumPopup("index offset type", src_indicesOffsetDataType);
+            src_index_CSV_Offset = EditorGUILayout.IntField("index offset type length", src_index_CSV_Offset);
+            EditorGUILayout.EndHorizontal();
+
+            // jave.lin : 
+            EditorGUILayout.BeginHorizontal();
+            indicesPickLengthType = (IndicesPickLengthType)EditorGUILayout.EnumPopup("index length type", indicesPickLengthType);
+            index_CSV_Length = EditorGUILayout.IntField(new GUIContent("index pickup length", "fill the GPA's Geometry's Primitive Count"), index_CSV_Length);
+            EditorGUILayout.EndHorizontal();
+        }
 
         const int WIDTH_1 = 180;
         const int WIDTH_2 = 180;
@@ -959,12 +1017,32 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
             {
                 material = EditorGUILayout.ObjectField("Material Asset", material, typeof(Material), false) as Material;
             }
+            RefreshMateiral();
 
             EditorGUI.indentLevel--;
         }
         EditorGUILayout.EndFoldoutHeaderGroup();
 
         EditorGUILayout.EndScrollView();
+    }
+
+    private void RefreshMateiral()
+    {
+        if (material != null)
+        {
+            if (shader == null)
+            {
+                shader = GetShader();
+            }
+            material.shader = shader;
+        }
+    }
+
+    private void Get_IBV_Offset_and_Length(out int ibv_offset, out int ibv_length)
+    {
+        float rate = (float)src_indicesOffsetDataType / (float)dst_indicesFormatType;
+        ibv_offset = (int)(rate * src_index_CSV_Offset);
+        ibv_length = (int)indicesPickLengthType * index_CSV_Length;
     }
 
     // jave.lin : 导出FBX处理
@@ -989,13 +1067,13 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
                 if (include_tangent && tangent_CSV_TextAsset != null) vbv_csv_List.Add(tangent_CSV_TextAsset.text);
                 if (include_normal && normal_CSV_TextAsset != null) vbv_csv_List.Add(normal_CSV_TextAsset.text);
                 if (include_uv0 && uv0_CSV_TextAsset != null) vbv_csv_List.Add(uv0_CSV_TextAsset.text);
-                if (include_uv0 && uv1_CSV_TextAsset != null) vbv_csv_List.Add(uv1_CSV_TextAsset.text);
-                if (include_uv0 && uv2_CSV_TextAsset != null) vbv_csv_List.Add(uv2_CSV_TextAsset.text);
-                if (include_uv0 && uv3_CSV_TextAsset != null) vbv_csv_List.Add(uv3_CSV_TextAsset.text);
-                if (include_uv0 && uv4_CSV_TextAsset != null) vbv_csv_List.Add(uv4_CSV_TextAsset.text);
-                if (include_uv0 && uv5_CSV_TextAsset != null) vbv_csv_List.Add(uv5_CSV_TextAsset.text);
-                if (include_uv0 && uv6_CSV_TextAsset != null) vbv_csv_List.Add(uv6_CSV_TextAsset.text);
-                if (include_uv0 && uv7_CSV_TextAsset != null) vbv_csv_List.Add(uv7_CSV_TextAsset.text);
+                if (include_uv1 && uv1_CSV_TextAsset != null) vbv_csv_List.Add(uv1_CSV_TextAsset.text);
+                if (include_uv2 && uv2_CSV_TextAsset != null) vbv_csv_List.Add(uv2_CSV_TextAsset.text);
+                if (include_uv3 && uv3_CSV_TextAsset != null) vbv_csv_List.Add(uv3_CSV_TextAsset.text);
+                if (include_uv4 && uv4_CSV_TextAsset != null) vbv_csv_List.Add(uv4_CSV_TextAsset.text);
+                if (include_uv5 && uv5_CSV_TextAsset != null) vbv_csv_List.Add(uv5_CSV_TextAsset.text);
+                if (include_uv6 && uv6_CSV_TextAsset != null) vbv_csv_List.Add(uv6_CSV_TextAsset.text);
+                if (include_uv7 && uv7_CSV_TextAsset != null) vbv_csv_List.Add(uv7_CSV_TextAsset.text);
                 if (include_color0 && color0_CSV_TextAsset != null) vbv_csv_List.Add(color0_CSV_TextAsset.text);
 
                 // jave.lin : 生成 uv y flip 标记字典
@@ -1010,7 +1088,20 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
                 if (flip_uv7_y) flip_UV_YCoordType_Dict[Flip_UV_YCoordsType.TEXCOORD7_Y] = true;
 
                 // jave.lin : 根据 CSV 生成 带 MeshRenderer 的 GO
-                outputGO = GenerateGOWithMeshRendererFromCSV(vbv_csv_List, index_CSV_TextAsset.text, is_from_DX_CSV, flip_UV_YCoordType_Dict);
+                Get_IBV_Offset_and_Length(out int ibv_offset, out int ibv_length);
+
+                var generate_info = new FillMeshFromCSVInfo()
+                {
+                    vbv_csv_List = vbv_csv_List,
+                    ibv_csv = index_CSV_TextAsset.text,
+                    use_ibv_offset_and_length = use_ibv_offset_and_length,
+                    ibv_offset = ibv_offset,
+                    ibv_length = ibv_length,
+                    is_from_DX_CSV = is_from_DX_CSV,
+                    flipUVYDict = flip_UV_YCoordType_Dict,
+                };
+
+                outputGO = GenerateGOWithMeshRendererFromCSV(generate_info);
                 outputGO.transform.SetParent(parent);
                 outputGO.name = modelName;
 
@@ -1037,7 +1128,7 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
                     else
                     {
                         // jave.lin : 自动创建材质
-                        var custom_shader = GetShader("PBR_MRA_SSS");
+                        var custom_shader = shader == null ? GetShader("PBR_MRA_SSS") : shader;
                         var create_mat = new Material(custom_shader);
                         // jave.lin : 创建前，先设置主纹理
                         create_mat.SetTexture("_MainTex", albedo_texture);
@@ -1057,6 +1148,8 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
                 {
                     outputGO.GetComponent<MeshRenderer>().sharedMaterial = material;
                 }
+
+                RefreshMateiral();
 
                 // jave.lin : 使用 FBX Exporter 插件导出 FBX
                 ModelExporter.ExportObject(outputModelPrefabFullName, outputGO);
@@ -1166,7 +1259,19 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
                 if (flip_uv7_y) flip_UV_YCoordType_Dict[Flip_UV_YCoordsType.TEXCOORD7_Y] = true;
 
                 // jave.lin : 根据 CSV 生成 带 MeshRenderer 的 GO
-                outputGO = GenerateGOWithMeshRendererFromCSV(vbv_csv_List, index_CSV_TextAsset.text, is_from_DX_CSV, flip_UV_YCoordType_Dict);
+                Get_IBV_Offset_and_Length(out int ibv_offset, out int ibv_length);
+                var generate_info = new FillMeshFromCSVInfo()
+                {
+                    vbv_csv_List = vbv_csv_List,
+                    ibv_csv = index_CSV_TextAsset.text,
+                    use_ibv_offset_and_length = use_ibv_offset_and_length,
+                    ibv_offset = ibv_offset,
+                    ibv_length = ibv_length,
+                    is_from_DX_CSV = is_from_DX_CSV,
+                    flipUVYDict = flip_UV_YCoordType_Dict,
+                };
+
+                outputGO = GenerateGOWithMeshRendererFromCSV(generate_info);
                 outputGO.transform.SetParent(parent);
                 outputGO.name = modelName;
 
@@ -1381,14 +1486,14 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
     }
 
     // jave.lin : 根据 CSV 内容生成 MeshRenderer 对应的 GO
-    private GameObject GenerateGOWithMeshRendererFromCSV(List<string> vbv_csv_list, string ibv_csv, bool is_from_DX_CSV, Dictionary<Flip_UV_YCoordsType, bool> flipUVYDict)
+    private GameObject GenerateGOWithMeshRendererFromCSV(FillMeshFromCSVInfo info)
     {
         var ret = new GameObject();
 
         var mesh = new Mesh();
-
+        info.mesh = mesh;
         // jave.lin : 根据 csv 来填充 mesh 信息
-        FillMeshFromCSV(mesh, vbv_csv_list, ibv_csv, is_from_DX_CSV, flipUVYDict);
+        FillMeshFromCSV(info);
 
         var meshFilter = ret.AddComponent<MeshFilter>();
         meshFilter.sharedMesh = mesh;
@@ -1676,9 +1781,29 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
         }
     }
 
-    // jave.lin : 根据 csv 来填充 mesh 信息
-    private void FillMeshFromCSV(Mesh mesh, List<string> vbv_csv_List, string ibv_csv, bool is_from_DX_CSV, Dictionary<Flip_UV_YCoordsType, bool> flipUVYDict)
+    struct FillMeshFromCSVInfo
     {
+        public Mesh mesh;
+        public List<string> vbv_csv_List;
+        public string ibv_csv;
+        public bool use_ibv_offset_and_length;
+        public int ibv_offset;
+        public int ibv_length;
+        public bool is_from_DX_CSV;
+        public Dictionary<Flip_UV_YCoordsType, bool> flipUVYDict;
+    }
+
+    // jave.lin : 根据 csv 来填充 mesh 信息
+    private void FillMeshFromCSV(FillMeshFromCSVInfo fillInfo)
+    {
+        Mesh mesh = fillInfo.mesh;
+        List<string> vbv_csv_List = fillInfo.vbv_csv_List;
+        string ibv_csv = fillInfo.ibv_csv;
+        int ibv_offset = fillInfo.ibv_offset;
+        int ibv_length = fillInfo.ibv_length;
+        bool is_from_DX_CSV = fillInfo.is_from_DX_CSV;
+        Dictionary<Flip_UV_YCoordsType, bool> flipUVYDict = fillInfo.flipUVYDict;
+
         var line_splitor = new string[] { "\n", "\r\n" };
         var line_element_splitor = new string[] { "," };
 
@@ -1696,6 +1821,71 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
                 var linesElements = lines[i].Split(line_element_splitor, StringSplitOptions.RemoveEmptyEntries);
                 // jave.lin : 直接取第二个数值作为索引
                 indices.Add(int.Parse(linesElements[1]));
+            }
+        }
+        /*
+
+            var indices = new List<int>({
+	            -1,		//0
+	            -1,		//1
+	            -1,		//2
+	            -1,		//3
+	            0,		//4
+	            1,		//5
+	            2,		//6
+	            3,		//7
+	            4,		//8
+	            5,		//9
+	            6,		//10
+	            -1,		//11
+	            -1,		//12
+	            -1,		//13
+	            -1		//14
+            }); // 15
+
+
+            ibv_offset = 4
+            ibv_length = 7
+
+            indices.RemoveRange(0, ibv_offset);
+
+            var indices = new List<int>({
+	            0,		//0	
+	            1,		//1	
+	            2,		//2	
+	            3,		//3	
+	            4,		//4
+	            5,		//5
+	            6,		//6
+	            -1,		//7
+	            -1,		//8
+	            -1,		//9
+	            -1		//10
+            }); // 11
+
+            indices.RemoveRange(ibv_length, indices.Count - ibv_length);
+
+            indices.RemoveRange(7, 11 - 7);
+            indices.RemoveRange(7, 4);
+
+            var indices = new List<int>({
+	            0,		//0	
+	            1,		//1	
+	            2,		//2	
+	            3,		//3	
+	            4,		//4
+	            5,		//5
+	            6,		//6
+            }); // 7
+       
+        */
+
+        if (fillInfo.use_ibv_offset_and_length)
+        {
+            if (ibv_length > 0)
+            {
+                indices.RemoveRange(0, ibv_offset);
+                indices.RemoveRange(ibv_length, indices.Count - ibv_length);
             }
         }
 
