@@ -144,6 +144,7 @@ public class JaveLin_GPA_CSV2FBX : EditorWindow
         FBX,            // 注意如果使用这种方式的话，会有 uv 不能保存超过 vector2 分量的数据，也就是说，uv无法保存 vector3 或 vector4 的数据
         UnityMesh,      // 如果抓帧的模型发现 shaderlab 里面有使用到 vertex input TEXCOORD[n] 是超过2个以上的分量的，就不能使用 FBX 了，使用 UnityMesh 保存的网格可以保存下这些 uv 数据
     }
+    // jave.lin : indices csv 的内容数据 偏移枚举类型
     public enum IndicesOffsetDataType
     {
         Byte = 1,
